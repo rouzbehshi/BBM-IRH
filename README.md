@@ -1,200 +1,236 @@
-# BBM-IRH
-Building Behavior Modeling - Indoor Relative Humidity Prediction
+# Building Behaviour Modelling for Indoor Relative Humidity Prediction
 
-This project aims to predict the Relative Humidity (RH) of a household using a dataset. The dataset contains observations of a 5 month period: 11 January 2016 to 27 May 2016. The dataset is a combination of measurements of humidity and temperature from households and weather data. The house has 9 residual zones and Humidity and temperature of it has been measured every 10 minutes
+A data-driven building modelling project for predicting indoor relative humidity using multi-zone environmental measurements, energy-use data, and outdoor weather conditions.
 
-The data set is at 10 min for about 4.5 months. The house temperature and humidity conditions were monitored with a ZigBee wireless sensor network. Each wireless node transmitted the temperature and humidity conditions around 3.3 min. Then, the wireless data was averaged for 10 minutes periods. The energy data was logged every 10 minutes with m-bus energy meters. Weather from the nearest airport weather station (Chievres Airport, Belgium) was downloaded from a public data set from Reliable Prognosis (rp5.ru), and merged together with the experimental data sets using the date and time column. Two random variables have been included in the data set for testing the regression models and to filter out non predictive attributes (parameters). 
+The project applies time-series feature engineering, feature selection, and machine-learning regression models to capture relationships between indoor environmental conditions and building behaviour. Particular attention is given to temporally consistent model evaluation through time-series cross-validation.
 
-# Attribute Information
+## Project Overview
 
-date time: year-month-day hour:minute:second.   
-Appliances: energy use [Wh].   
-lights: energy use of light fixtures in the house [Wh].   
-T1: Temperature in kitchen area [Celsius].   
-RH_1: Humidity in kitchen area [%].   
-T2: Temperature in living room area [Celsius].   
-RH_2: Humidity in living room area [%].   
-T3: Temperature in laundry room area [Celsius].   
-RH_3: Humidity in laundry room area [%].   
-T4: Temperature in office room [Celsius].   
-RH_4: Humidity in office room [%].   
-T5: Temperature in bathroom [Celsius].    
-RH_5: Humidity in bathroom [%].   
-T6: Temperature outside the building (north side) [Celsius].   
-RH_6: Humidity outside the building (north side) [%].   
-T7: Temperature in ironing room [Celsius].   
-RH_7: Humidity in ironing room [%].   
-T8: Temperature in teenager room 2 [Celsius].   
-RH_8: Humidity in teenager room 2 [%].   
-T9: Temperature in parents room [Celsius].   
-RH_9: Humidity in parents room [%].   
-To: Temperature outside (from Chievres weather station) [Celsius].   
-Pressure: (from Chievres weather station) [mm Hg].   
-RH_out: Humidity outside (from Chievres weather station) [%].   
-Wind speed: (from Chievres weather station) [in m/s].   
-Visibility: (from Chievres weather station) [km].   
-Tdewpoint: (from Chievres weather station) [Celsius].   
-rv1: Random variable 1 [nondimensional].   
-rv2, Random variable 2 [nondimensional].   
+Indoor relative humidity is influenced by both internal building conditions and external weather. This project investigates whether indoor relative humidity can be predicted from a combination of:
 
-# Time-related features
+- room-level temperature and humidity measurements;
+- appliance and lighting energy use;
+- outdoor temperature and humidity;
+- atmospheric pressure, wind speed, visibility, and dew point;
+- calendar and occupancy-related time features; and
+- lagged indoor temperature and humidity variables.
 
-1. Adding hour, day of the week, Month.  
-2. Adding weekend flag.  
-3. Adding the working hours.  
-4. Adding 20-minute interval lagged columns of temperatures and relative humidities.  
+The dataset covers approximately 4.5 months, from **11 January 2016 to 27 May 2016**, with measurements aggregated at **10-minute resolution**.
 
-# Visualizing And Exploring Dataset
-**Correlation matrix:**
+Indoor temperature and humidity were monitored using a **ZigBee wireless sensor network**, while energy consumption was recorded using M-Bus energy meters. Weather observations from the Chievres Airport weather station in Belgium were merged with the building measurements by timestamp.
 
-<p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/Correlation-Matrix.png"  alt="correlation matrix" title="correlation matrix" width="800" >
-</p>
+## Objectives
 
-# ML with feature selection
+The main objectives are to:
 
-## Feature extraction
+1. Explore relationships among indoor environmental, energy-use, and weather variables.
+2. Engineer time-dependent and lagged features relevant to building behaviour.
+3. Identify informative predictors using sequential feature-selection procedures.
+4. Compare multiple regression and machine-learning approaches.
+5. Evaluate model performance using time-series-aware validation.
+6. Assess the effect of feature selection on predictive performance.
 
-```WAPE(y_true, y_pred)```: Weighted Absolute Percentage Error (WAPE) between two sets of values: y_true and y_pred.  
-```acc_timeseriessplit(X,Y,model,cv)```: The average Weighted Absolute Percentage Error (WAPE) for a given model using time series cross-validation.  
-```feature_sel_1 (model,Features,Target,Save_address=None,cv=10)```: This function performs a stepwise feature selection procedure based on the correlation between input features and the target variable. It aims to find the optimal set of features that minimizes the Weighted Absolute Percentage Error (WAPE) for a given model (model) using time series cross-validation.   
-```feature_sel_2(model,Features,Target,FeatureSelection,Save_address=None,cv=10)```: This second step of feature selection aims to further refine the feature set by evaluating the features in a different order.  
-```feature_sel_3(algorithm,Features,Target,FeatureSelection,Save_address=None,cv=10)```: The third step of feature selection aims to further refine the feature set by iteratively evaluating each remaining feature and selecting the one that yields the lowest WAPE value in each iteration. 
+## Data
 
-**Selected features 1**
+The building contains nine monitored indoor zones, including the kitchen, living room, laundry room, office, bathroom, ironing room, teenager room, and parents room.
 
-<p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/selected_features_step1.png"  alt="selected feauture1" title="selected feauture1" width="800" >
-</p>
+### Main variables
 
-**Selected features 2**
+| Category | Variables |
+| --- | --- |
+| Energy use | `Appliances`, `lights` |
+| Indoor temperature | `T1`–`T9` |
+| Indoor relative humidity | `RH_1`–`RH_9` |
+| Outdoor/building-side conditions | `T6`, `RH_6` |
+| Weather-station data | `To`, `Pressure`, `RH_out`, `Wind speed`, `Visibility`, `Tdewpoint` |
+| Auxiliary variables | `rv1`, `rv2` |
+
+The two random variables are retained as non-predictive reference attributes for model testing and feature-selection analysis.
+
+## Time-Series Feature Engineering
+
+The following additional features are created from the original measurements:
+
+- hour of day;
+- day of week;
+- month;
+- weekend indicator;
+- working-hours indicator; and
+- 20-minute lagged temperature and relative-humidity variables.
+
+These features are designed to represent temporal patterns, occupancy-related behaviour, and delayed indoor environmental effects.
+
+## Exploratory Analysis
+
+A correlation matrix is used to examine the relationships among the available predictors and indoor environmental variables.
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/selected_features_step2.png"  alt="selected feauture2" title="selected feauture2" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/Correlation-Matrix.png"
+       alt="Correlation matrix of building, energy, and weather variables"
+       width="800">
 </p>
 
-**Selected features 3**
+## Modelling Workflow
+
+Three regression approaches are evaluated:
+
+- **Linear Regression**
+- **Random Forest**
+- **XGBoost**
+
+Two modelling configurations are compared:
+
+1. models trained using a selected subset of features; and
+2. models trained without feature selection.
+
+Model assessment uses temporally ordered cross-validation rather than random shuffling in order to preserve the time-series structure of the data.
+
+### Evaluation metrics
+
+Performance is assessed using:
+
+- **MAE** — Mean Absolute Error
+- **MSE** — Mean Squared Error
+- **R²** — Coefficient of Determination
+- **WAPE** — Weighted Absolute Percentage Error
+
+## Feature Selection
+
+A sequential feature-selection procedure is implemented using time-series cross-validation and WAPE as the selection criterion.
+
+The main functions are:
+
+- `WAPE(y_true, y_pred)`  
+  Computes the Weighted Absolute Percentage Error.
+
+- `acc_timeseriessplit(X, Y, model, cv)`  
+  Computes average WAPE using time-series cross-validation.
+
+- `feature_sel_1(model, Features, Target, Save_address=None, cv=10)`  
+  Performs an initial stepwise feature-selection procedure.
+
+- `feature_sel_2(model, Features, Target, FeatureSelection, Save_address=None, cv=10)`  
+  Refines the selected feature set using an alternative evaluation order.
+
+- `feature_sel_3(algorithm, Features, Target, FeatureSelection, Save_address=None, cv=10)`  
+  Iteratively evaluates the remaining features and selects those producing the lowest WAPE.
+
+### Feature-selection stages
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/selected_features_step3.png"  alt="selected feauture3" title="selected feauture3" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/selected_features_step1.png"
+       alt="Selected features - step 1"
+       width="800">
 </p>
-
-## Linear regression (LR)
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-LR.png"  alt="RvV-LR" title="RvV-LR" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/selected_features_step2.png"
+       alt="Selected features - step 2"
+       width="800">
 </p>
-
-**Performance metrics:**
-
-| Metric | Value |
-| :-: | :-: |
-| MAE_LR | 1.21 |
-| MSE_LR | 2.85 |
-| R2 Score_LR | 0.7031 |
-  
-## Random Forest (RF)
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-RF.png"  alt="RvV-LRF" title="RvV-RF" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/selected_features_step3.png"
+       alt="Selected features - step 3"
+       width="800">
 </p>
 
-**Performance metrics:**
+## Results
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_LR | 1.46 |
-| MSE_LR | 4.12 |
-| R2 Score_LR | 0.6577 |
+### Models with feature selection
 
-## XGboost
+| Model | MAE | MSE | R² |
+| --- | ---: | ---: | ---: |
+| Linear Regression | 1.21 | 2.85 | 0.7031 |
+| Random Forest | 1.46 | 4.12 | 0.6577 |
+| XGBoost | 1.27 | 3.09 | 0.6908 |
+
+Among the feature-selected models, **Linear Regression** achieved the strongest validation performance and was therefore used for the corresponding test evaluation.
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-XG.png"  alt="RvV-XG" title="RvV-XG" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-LR.png"
+       alt="Linear Regression validation predictions with feature selection"
+       width="800">
 </p>
 
-**Performance metrics:**
+The selected Linear Regression model achieved the following test performance:
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_LR | 1.27 |
-| MSE_LR | 3.09 |
-| R2 Score_LR | 0.6908 |
-
-**Note:** Having analyzed the performance matrices, Linear regression is chosen as the promising model and the model is fitted for the test section.   
+| Metric | Test value |
+| --- | ---: |
+| MAE | 1.48 |
+| MSE | 4.28 |
+| R² | 0.8404 |
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvT-LR.png"  alt="RvT-LR" title="RvT-LR" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvT-LR.png"
+       alt="Linear Regression test predictions with feature selection"
+       width="800">
 </p>
 
-**Performance metrics:**
+### Models without feature selection
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_LR | 1.48 |
-| MSE_LR | 4.28 |
-| R2 Score_LR | 0.8404 |
+| Model | MAE | MSE | R² |
+| --- | ---: | ---: | ---: |
+| Linear Regression | 0.96 | 2.14 | 0.7670 |
+| Random Forest | 1.13 | 2.56 | 0.7162 |
+| XGBoost | 1.04 | 2.19 | 0.7761 |
 
-# ML without feature selection
-## Linear regression (LR)
+Among the models trained without feature selection, **XGBoost** achieved the highest validation R² and was selected for the corresponding test evaluation.
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-LR-nofeat.png"  alt="RvV-LR-nofeat" title="RvV-LR-nofeat" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-XG-nofeat.png"
+       alt="XGBoost validation predictions without feature selection"
+       width="800">
 </p>
 
-**Performance metrics:**
+The selected XGBoost model achieved the following test performance:
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_LR | 0.96 |
-| MSE_LR | 2.14 |
-| R2 Score_LR | 0.767 |
-
-## Random Forest (RF)
+| Metric | Test value |
+| --- | ---: |
+| MAE | 1.34 |
+| MSE | 3.53 |
+| R² | 0.8645 |
 
 <p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-RF-nofeat.png"  alt="RvV-RF-nofeat" title="RvV-RF-nofeat" width="800" >
+  <img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvT-XG-nofeat.png"
+       alt="XGBoost test predictions without feature selection"
+       width="800">
 </p>
 
-**Performance metrics:**
+## Key Findings
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_LR | 1.13 |
-| MSE_LR | 2.56 |
-| R2 Score_LR | 0.7162 |
+- Indoor relative humidity can be modelled with good predictive accuracy using a combination of building, weather, energy-use, temporal, and lagged variables.
+- Time-series feature engineering provides a structured way to capture recurring and delayed effects in indoor environmental conditions.
+- Feature selection does not necessarily improve predictive performance for every model.
+- In this analysis, the best reported test performance was obtained by **XGBoost without feature selection**, with an **R² of 0.8645**.
+- Linear Regression remained competitive, indicating that a substantial part of the relationship between the selected inputs and indoor relative humidity can be represented using a relatively simple model.
 
-## XGboost
+## Relevance
 
-<p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvV-XG-nofeat.png"  alt="RvV-XG-nofeat" title="RvV-XG-nofeat" width="800" >
-</p>
+This project demonstrates experience in:
 
-**Performance metrics:**
+- data-driven building behaviour modelling;
+- indoor environmental prediction;
+- building and weather time-series analysis;
+- sensor-data processing;
+- temporal and lagged feature engineering;
+- machine-learning regression;
+- feature selection;
+- time-series cross-validation; and
+- quantitative model evaluation.
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_XG1 | 1.04 |
-| MSE_XG1 | 2.19 |
-| R2 Score_XG | 0.7761 |
+The workflow is relevant to applications in **building energy management, indoor-environment monitoring, smart buildings, digital twins, and data-driven building control**.
 
-**Note:** Having analyzed the performance matrices, XGboost is chosen as the promising model and the model is fitted for the test section.   
+## Technologies and Methods
 
-<p align="center">
-<img src="https://github.com/rouzbehshi/BBM-IRH/blob/99ce849c3a3a0030690d3607e3a0574d9fc8a6a6/figures/RvT-XG-nofeat.png"  alt="RvT-XG-nofeat" title="RvT-XG-nofeat" width="800" >
-</p>
+**Programming:** Python  
+**Modelling:** Linear Regression, Random Forest, XGBoost  
+**Data analysis:** time-series processing, correlation analysis, feature engineering  
+**Validation:** time-series cross-validation  
+**Metrics:** WAPE, MAE, MSE, R²
 
-**Performance metrics:**
+---
 
-| Metric | Value |
-| :-: | :-: |
-| MAE_XGT1 | 1.34 |
-| MSE_XGT | 3.53 |
-| R2 Score_XGT1 | 0.8645 |
+### Repository
 
-
-
- 
-
-   
-    
+**BBM-IRH — Building Behaviour Modelling: Indoor Relative Humidity Prediction**
