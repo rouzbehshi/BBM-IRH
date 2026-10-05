@@ -230,7 +230,3 @@ The workflow is relevant to applications in **building energy management, indoor
 **Metrics:** WAPE, MAE, MSE, R²
 
 ---
-
-### Repository
-
-**BBM-IRH — Building Behaviour Modelling: Indoor Relative Humidity Prediction**
